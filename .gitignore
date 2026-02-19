@@ -1,0 +1,21 @@
+# Maven
+/target/
+
+# Drivers (não versionar executáveis)
+/drivers/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+target/
