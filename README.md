@@ -51,7 +51,7 @@ Acessibilidade da página inicial – Verificação da disponibilidade dos eleme
 
 Clone o repositório:
 
-git clone https://github.com/seu-usuario/parabank-tests.git
+git clone [https://github.com/Dev02553/Testes-Automatizados_ParaBank]
 
 
 Abra o projeto em sua IDE de preferência (Eclipse, IntelliJ, VS Code).
@@ -128,7 +128,7 @@ Homepage accessibility – Verify the availability of main elements.
 
 Clone the repository:
 
-git clone https://github.com/your-username/parabank-tests.git
+git clone [https://github.com/Dev02553/Testes-Automatizados_ParaBank]
 
 
 Open the project in your preferred IDE (Eclipse, IntelliJ, VS Code).
