@@ -1,5 +1,7 @@
 package base;
 
+import io.github.bonigarcia.wdm.WebDriverManager;
+import io.qameta.allure.Attachment;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +24,18 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class BaseTest {
+
+    // -------------------------------------------------------------------------
+    // ThreadLocal: garante isolamento quando testes rodarem em paralelo no futuro
+    // -------------------------------------------------------------------------
+    private static final ThreadLocal<WebDriver> driverHolder = new ThreadLocal<>();
 
     protected WebDriver driver;
     protected WebDriverWait wait;
 
-    // baseUrl fixa e resolvida (evita URL quebrada e InvalidArgument)
     protected final String baseUrl = resolveBaseUrl(
             System.getProperty("baseUrl", "https://parabank.parasoft.com/parabank")
     );
@@ -36,24 +43,55 @@ public class BaseTest {
     protected final String defaultUser = propOrDefault("parabank.user", "john");
     protected final String defaultPass = propOrDefault("parabank.pass", "demo");
 
+    // -------------------------------------------------------------------------
+    // Watcher: captura screenshot tanto em falha quanto em sucesso (opcional)
+    // e envia para o Allure como anexo visível no relatório
+    // -------------------------------------------------------------------------
     @RegisterExtension
     TestWatcher watcher = new TestWatcher() {
+
         @Override
         public void testFailed(ExtensionContext context, Throwable cause) {
+            // Screenshot vai para target/screenshots E para o relatório Allure
+            captureScreenshotForAllure("FALHA — " + context.getDisplayName());
             try {
-                saveScreenshot(context.getDisplayName());
+                saveScreenshotToDisk(context.getDisplayName());
             } catch (Exception ignored) {
-                // best-effort
+                // best-effort: não interrompe o tearDown
             }
+        }
+
+        @Override
+        public void testSuccessful(ExtensionContext context) {
+            // Descomente a linha abaixo se quiser screenshot de testes que passam também:
+            // captureScreenshotForAllure("OK — " + context.getDisplayName());
+        }
+
+        @Override
+        public void testDisabled(ExtensionContext context, Optional<String> reason) {}
+
+        @Override
+        public void testAborted(ExtensionContext context, Throwable cause) {
+            captureScreenshotForAllure("ABORTADO — " + context.getDisplayName());
         }
     };
 
+    // -------------------------------------------------------------------------
+    // Setup
+    // -------------------------------------------------------------------------
+
     @BeforeEach
     public void setUp() {
+        // WebDriverManager resolve o chromedriver compatível com o Chrome instalado.
+        // Não é mais necessário ter chromedriver.exe no repositório.
+        WebDriverManager.chromedriver().setup();
+
         ChromeOptions options = new ChromeOptions();
 
         boolean headless = Boolean.parseBoolean(System.getProperty("headless", "false"));
-        if (headless) options.addArguments("--headless=new");
+        if (headless) {
+            options.addArguments("--headless=new");
+        }
 
         options.addArguments("--window-size=1280,800");
         options.addArguments("--disable-gpu");
@@ -62,17 +100,20 @@ public class BaseTest {
         options.addArguments("--lang=en-US");
 
         driver = new ChromeDriver(options);
+
+        // Armazena no ThreadLocal para que o watcher acesse mesmo após o teste falhar
+        driverHolder.set(driver);
+
         wait = new WebDriverWait(driver, Duration.ofSeconds(25));
 
         open("/index.htm");
 
-        // Se o site estiver fora do ar, pula os testes para não quebrar o build
+        // Se o site estiver fora do ar, pula os testes em vez de quebrar o build
         String page = driver.getPageSource().toLowerCase();
         if (page.contains("system is offline") || page.contains("temporarily unavailable")) {
             Assumptions.assumeTrue(false, "ParaBank está offline/indisponível no momento.");
         }
 
-        // Espera login OU leftPanel (caso já esteja logado)
         wait.until(d ->
                 isPresent(By.name("username")) ||
                 isPresent(By.id("loginPanel")) ||
@@ -82,29 +123,77 @@ public class BaseTest {
 
     @AfterEach
     public void tearDown() {
-        if (driver != null) driver.quit();
+        if (driver != null) {
+            driver.quit();
+        }
+        // Limpa o ThreadLocal para evitar leak em execuções paralelas
+        driverHolder.remove();
     }
 
-    // ------------------------------
-    // URL helpers
-    // ------------------------------
+    // -------------------------------------------------------------------------
+    // Acesso estático ao driver (usado pelo watcher e por utilitários externos)
+    // -------------------------------------------------------------------------
+
+    public static WebDriver getDriver() {
+        return driverHolder.get();
+    }
+
+    // -------------------------------------------------------------------------
+    // Allure: screenshot como anexo no relatório
+    // -------------------------------------------------------------------------
 
     /**
-     * Abre URL absoluta ou path relativo (ex: "/overview.htm").
-     * Evita InvalidArgumentException por driver.get("/algo").
+     * Tira screenshot e anexa ao relatório Allure.
+     * A anotação @Attachment instrui o Allure a capturar o retorno do método.
      */
+    @Attachment(value = "{label}", type = "image/png")
+    protected byte[] captureScreenshotForAllure(String label) {
+        WebDriver d = driverHolder.get();
+        if (d instanceof TakesScreenshot) {
+            return ((TakesScreenshot) d).getScreenshotAs(OutputType.BYTES);
+        }
+        return new byte[0];
+    }
+
+    // -------------------------------------------------------------------------
+    // Screenshot em disco (target/screenshots) — mantido para compatibilidade
+    // -------------------------------------------------------------------------
+
+    protected void saveScreenshotToDisk(String testName) throws Exception {
+        if (driver == null) return;
+        if (!(driver instanceof TakesScreenshot)) return;
+
+        File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+        Path outDir = Paths.get("target", "screenshots");
+        Files.createDirectories(outDir);
+
+        String safeName = testName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        Path out = outDir.resolve(safeName + "_" + ts + ".png");
+
+        Files.copy(src.toPath(), out);
+        System.out.println("[BaseTest] Screenshot salvo: " + out);
+    }
+
+    // Mantém o nome antigo para não quebrar subclasses que já chamem saveScreenshot()
+    protected void saveScreenshot(String testName) throws Exception {
+        saveScreenshotToDisk(testName);
+    }
+
+    // -------------------------------------------------------------------------
+    // URL helpers — sem alteração de comportamento
+    // -------------------------------------------------------------------------
+
     protected void open(String pathOrUrl) {
         String v = (pathOrUrl == null) ? "" : pathOrUrl.trim();
         if (v.isEmpty()) v = "/index.htm";
 
-        // URL completa
         if (v.startsWith("http://") || v.startsWith("https://")) {
             System.out.println("[BaseTest] Abrindo: " + v);
             driver.get(v);
             return;
         }
 
-        // path relativo
         if (!v.startsWith("/")) v = "/" + v;
 
         String url = baseUrl + v;
@@ -118,18 +207,12 @@ public class BaseTest {
         if (v.isEmpty() || (v.startsWith("${") && v.endsWith("}"))) {
             v = "https://parabank.parasoft.com/parabank";
         }
-
-        // se vier "/parabank"
         if (v.startsWith("/")) {
             v = "https://parabank.parasoft.com" + v;
         }
-
-        // se vier sem protocolo
         if (!v.startsWith("http://") && !v.startsWith("https://")) {
             v = "https://" + v;
         }
-
-        // remove barra final
         if (v.endsWith("/")) v = v.substring(0, v.length() - 1);
         return v;
     }
@@ -141,9 +224,9 @@ public class BaseTest {
         return v.isEmpty() ? def : v;
     }
 
-    // ------------------------------
-    // Wait + actions
-    // ------------------------------
+    // -------------------------------------------------------------------------
+    // Wait + actions — sem alteração de comportamento
+    // -------------------------------------------------------------------------
 
     protected WebElement waitForVisible(By by) {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
@@ -172,12 +255,13 @@ public class BaseTest {
     }
 
     protected boolean isLoggedIn() {
-        return isPresent(By.cssSelector("#leftPanel a[href*='logout.htm']")) || isPresent(By.linkText("Log Out"));
+        return isPresent(By.cssSelector("#leftPanel a[href*='logout.htm']"))
+                || isPresent(By.linkText("Log Out"));
     }
 
-    // ------------------------------
-    // Right panel helpers (NECESSÁRIO PARA RegisterTest)
-    // ------------------------------
+    // -------------------------------------------------------------------------
+    // Right panel helpers
+    // -------------------------------------------------------------------------
 
     protected void waitForRightPanelReady() {
         waitForVisible(By.id("rightPanel"));
@@ -199,19 +283,14 @@ public class BaseTest {
         }
     }
 
-    // ------------------------------
-    // Login / navegação
-    // ------------------------------
+    // -------------------------------------------------------------------------
+    // Login / navegação — sem alteração de comportamento
+    // -------------------------------------------------------------------------
 
     protected void loginDefault() {
         login(defaultUser, defaultPass);
     }
 
-    /**
-     * Login robusto:
-     * - Se já estiver logado, não tenta logar de novo.
-     * - Espera logout OU erro.
-     */
     protected void login(String username, String password) {
         if (isLoggedIn()) return;
 
@@ -266,8 +345,8 @@ public class BaseTest {
         waitForVisible(By.id("rightPanel"));
     }
 
-    // aliases pra testes antigos
-    protected void goToLink(String linkText) { goTo(linkText); }
+    // Aliases mantidos para compatibilidade com testes existentes
+    protected void goToLink(String linkText)     { goTo(linkText); }
     protected void goToLeftMenu(String linkText) { goTo(linkText); }
 
     protected void waitUntilSelectHasOptions(By selectLocator) {
@@ -300,7 +379,7 @@ public class BaseTest {
         By fromAccount = By.id("fromAccountId");
         if (isPresent(fromAccount)) waitUntilSelectHasOptions(fromAccount);
 
-        new Select(driver.findElement(By.id("type"))).selectByValue("1"); // Savings
+        new Select(driver.findElement(By.id("type"))).selectByValue("1");
         click(By.cssSelector("input.button"));
 
         wait.until(d ->
@@ -308,24 +387,5 @@ public class BaseTest {
                 d.getPageSource().toLowerCase().contains("account opened") ||
                 d.getPageSource().toLowerCase().contains("congratulations")
         );
-    }
-
-    // ------------------------------
-    // Screenshot
-    // ------------------------------
-
-    protected void saveScreenshot(String testName) throws Exception {
-        if (driver == null) return;
-        if (!(driver instanceof TakesScreenshot)) return;
-
-        File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-        Path outDir = Paths.get("target", "screenshots");
-        Files.createDirectories(outDir);
-
-        String safeName = testName.replaceAll("[^a-zA-Z0-9._-]", "_");
-        String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        Path out = outDir.resolve(safeName + "_" + ts + ".png");
-
-        Files.copy(src.toPath(), out);
     }
 }
