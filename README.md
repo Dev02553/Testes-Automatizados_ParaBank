@@ -1,153 +1,214 @@
-🏦 ParaBank – Testes Automatizados (Projeto Acadêmico)
+# 🏦 ParaBank — Automação E2E com Selenium + JUnit
 
-Este repositório contém um projeto acadêmico de testes automatizados utilizando Java, Selenium WebDriver e JUnit, aplicado ao sistema de demonstração ParaBank
-.
+Projeto acadêmico de automação de testes end-to-end desenvolvido em **Java**, utilizando **Selenium WebDriver**, **JUnit 5**, **Maven** e **Allure Report**, aplicado ao sistema de demonstração **ParaBank**.
 
-O objetivo foi validar diferentes funcionalidades críticas do site, explorando boas práticas de automação de testes e organização de casos.
+A proposta deste projeto foi praticar a automação de fluxos reais de usuário em uma aplicação web, organizando os testes de forma clara, executável e mais próxima de um cenário profissional de QA.
 
-🎯 Objetivo do Projeto
+## 🎯 Objetivo
 
-Criar um conjunto de 10 testes automatizados cobrindo fluxos principais do sistema bancário online.
+O principal objetivo foi construir uma suíte automatizada capaz de validar jornadas importantes do sistema, cobrindo funcionalidades críticas da aplicação e aplicando boas práticas de estruturação dos testes.
 
-Desenvolver um plano de testes organizado, com setup e teardown bem definidos.
+Com este projeto, busquei praticar:
 
-Aplicar Selenium + JUnit em um cenário realista de aplicação web.
+- automação E2E em aplicação web realista
+- organização de testes com Java + JUnit
+- execução via Maven
+- uso de relatórios para leitura rápida dos resultados
+- preparação da suíte para uso local e evolução em CI
 
-🧪 Casos de Teste Implementados
+---
 
-Os testes cobrem cenários essenciais do ParaBank, incluindo:
+## ✅ Resultado atual
 
-Login válido – Acesso com credenciais corretas.
+- **10 casos de teste automatizados**
+- **100% de aprovação na execução reportada**
+- **Relatório Allure com visão consolidada das suítes**
+- **Execução via Maven**
+- **Gerenciamento de drivers com WebDriverManager**
 
-Login inválido – Tentativa de login com credenciais incorretas.
+---
 
-Abertura de nova conta – Criação de uma conta vinculada ao usuário.
+## 🧪 Cenários automatizados
 
-Transferência de fundos – Transferência de saldo entre contas existentes.
+A suíte cobre fluxos relevantes do ParaBank, incluindo:
 
-Pagamento de contas (Bill Pay) – Registro de um pagamento.
+- **Login válido**
+- **Login inválido**
+- **Abertura de nova conta**
+- **Transferência de fundos**
+- **Pagamento de contas**
+- **Atualização de informações do perfil**
+- **Solicitação de empréstimo**
+- **Acesso ao histórico / extrato**
+- **Logout**
+- **Acesso sem autenticação / validações de navegação**
 
-Atualização de informações do perfil – Alteração de dados cadastrais do cliente.
+> Os nomes exatos dos testes podem variar conforme a implementação no código, mas a suíte foi estruturada para cobrir os principais fluxos do sistema.
 
-Solicitação de empréstimo – Simulação de pedido de crédito.
+---
 
-Acesso ao histórico de transações – Validação da listagem de movimentações.
+## 🛠️ Stack utilizada
 
-Logout – Encerramento da sessão do usuário.
+- **Java**
+- **Selenium WebDriver**
+- **JUnit 5**
+- **Maven**
+- **Allure Report**
+- **WebDriverManager**
+- **GitHub Actions** *(quando configurado no repositório)*
 
-Acessibilidade da página inicial – Verificação da disponibilidade dos elementos principais.
+---
 
-⚙️ Tecnologias Utilizadas
+## 📊 Relatórios
 
-☕ Java
+O projeto utiliza **Allure Report** para facilitar a leitura da execução dos testes.
 
-🌐 Selenium WebDriver
+Com isso, é possível visualizar:
 
-✅ JUnit
+- quantidade total de casos executados
+- taxa de sucesso da suíte
+- suites organizadas por classe
+- visão mais clara da execução do que apenas logs de terminal
 
-📦 Maven (para gerenciamento de dependências)
+---
 
-🚀 Como Executar os Testes
+## 🚀 Como executar
 
-Clone o repositório:
+### 1. Clone o repositório
 
-git clone [https://github.com/Dev02553/Testes-Automatizados_ParaBank]
+```bash
+git clone https://github.com/Dev02553/Testes-Automatizados_ParaBank.git
+2. Acesse a pasta do projeto
 
+Execute os comandos na pasta que contém o pom.xml.
 
-Abra o projeto em sua IDE de preferência (Eclipse, IntelliJ, VS Code).
-
-Instale as dependências com Maven:
-
-mvn clean install
-
-
-Execute os testes via IDE ou terminal:
-
+cd Testes-Automatizados_ParaBank
+3. Execute os testes
+Execução padrão
 mvn test
+Execução headless
+mvn test -Dheadless=true
+4. Abrir o relatório Allure
+mvn allure:serve
 
+No PowerShell, se quiser executar os comandos em sequência, prefira rodar em linhas separadas ou usar ; no lugar de &&.
+
+Exemplo:
+
+mvn test -Dheadless=true
+mvn allure:serve
+📁 Estrutura esperada do projeto
+
+A organização segue a ideia de separar testes, configuração e execução, mantendo a suíte mais fácil de entender e evoluir.
+
+Exemplo de responsabilidades presentes no projeto:
+
+classes de teste por fluxo
+setup/teardown centralizados
+dependências via Maven
+execução local por terminal
+suporte a relatório com Allure
 📚 Observações
+O ParaBank é um sistema público de demonstração mantido pela Parasoft.
+Por ser um ambiente demo, a aplicação pode apresentar variações ou instabilidades pontuais.
+Este projeto tem finalidade acadêmica e de portfólio, servindo como prova prática de automação E2E com Java.
+📈 Próximos passos
 
-O site ParaBank é mantido pela Parasoft para fins de demonstração e prática.
+Como evolução do projeto, os próximos passos mais naturais seriam:
 
-Este projeto não tem finalidade comercial, sendo apenas uma prova de conceito acadêmica.
-
+ampliar a cobertura para mais cenários negativos
+melhorar o isolamento de dados entre execuções
+expandir a integração com CI
+publicar relatórios como artefatos automatizados
+evoluir a estrutura para padrões ainda mais reutilizáveis
 👨‍💻 Autor
 
-Projeto desenvolvido por David Silva Rodrigues, estudante de Análise e Desenvolvimento de Sistemas.
+David Silva Rodrigues
 
-🏦 ParaBank – Automated Tests (Academic Project)
+Estudante de Análise e Desenvolvimento de Sistemas, com foco em projetos de QA, automação, dados e desenvolvimento.
 
-This repository contains an academic project of automated testing using Java, Selenium WebDriver, and JUnit, applied to the demo system ParaBank
-.
+GitHub: https://github.com/Dev02553
+LinkedIn: https://www.linkedin.com/in/david-silva-rodrigues-500190284/
+🇺🇸 English version
+🏦 ParaBank — E2E Automation with Selenium + JUnit
 
-The goal was to validate different critical functionalities of the site, applying best practices in test automation.
+Academic end-to-end test automation project built with Java, Selenium WebDriver, JUnit 5, Maven, and Allure Report, using the ParaBank demo application.
 
-🎯 Project Objective
+The goal of this project was to practice automating real user flows in a web application while organizing the suite in a clearer and more maintainable way.
 
-Build a set of 10 automated tests covering main user flows.
+🎯 Goal
 
-Develop a structured test plan with setup and teardown.
+The main goal was to create an automated suite capable of validating important user journeys in the system, covering critical flows and applying solid automation practices.
 
-Apply Selenium + JUnit in a real-world web application scenario.
+This project was also used to practice:
 
-🧪 Test Cases Implemented
+E2E automation in a realistic web application
+test organization with Java + JUnit
+Maven-based execution
+result analysis through reports
+preparation for local execution and CI evolution
+✅ Current result
+10 automated test cases
+100% pass rate in the reported execution
+Allure Report with suite overview
+Maven-based execution
+Driver management with WebDriverManager
+🧪 Automated scenarios
 
-The automated tests cover key scenarios of ParaBank, including:
+The suite covers relevant ParaBank flows, including:
 
-Valid login – Access with correct credentials.
+Valid login
+Invalid login
+Open new account
+Fund transfer
+Bill payment
+Update profile information
+Loan request
+Transaction history / account activity
+Logout
+Access without authentication / navigation validations
+🛠️ Tech stack
+Java
+Selenium WebDriver
+JUnit 5
+Maven
+Allure Report
+WebDriverManager
+GitHub Actions (when configured in the repository)
+📊 Reports
 
-Invalid login – Attempt with incorrect credentials.
+The project uses Allure Report to make test execution easier to read and analyze.
 
-Open new account – Create an additional account linked to the user.
+This helps visualize:
 
-Fund transfer – Transfer money between existing accounts.
+total executed test cases
+suite success rate
+organized suite view by class
+clearer execution results than terminal logs alone
+🚀 How to run
+1. Clone the repository
+git clone https://github.com/Dev02553/Testes-Automatizados_ParaBank.git
+2. Open the project folder
 
-Bill payment – Register and process a payment.
+Run commands from the folder that contains the pom.xml file.
 
-Update profile information – Change customer data.
-
-Loan request – Simulate a credit request.
-
-Transaction history access – Validate the list of past transactions.
-
-Logout – End the user session.
-
-Homepage accessibility – Verify the availability of main elements.
-
-⚙️ Tech Stack
-
-☕ Java
-
-🌐 Selenium WebDriver
-
-✅ JUnit
-
-📦 Maven
-
-🚀 How to Run
-
-Clone the repository:
-
-git clone [https://github.com/Dev02553/Testes-Automatizados_ParaBank]
-
-
-Open the project in your preferred IDE (Eclipse, IntelliJ, VS Code).
-
-Install dependencies with Maven:
-
-mvn clean install
-
-
-Run tests via IDE or terminal:
-
+cd Testes-Automatizados_ParaBank
+3. Run the tests
+Standard execution
 mvn test
-
+Headless execution
+mvn test -Dheadless=true
+4. Open the Allure report
+mvn allure:serve
 📚 Notes
-
-ParaBank is maintained by Parasoft for demo and practice purposes.
-
-This project is an academic proof of concept, not intended for production use.
-
+ParaBank is a public demo system maintained by Parasoft.
+Because it is a demo environment, occasional instability or UI variation may happen.
+This project was built for academic and portfolio purposes, as a practical demonstration of E2E automation with Java.
 👨‍💻 Author
 
-Project developed by David Silva Rodrigues, student of Systems Analysis and Development.
+David Silva Rodrigues
+
+Systems Analysis and Development student focused on QA, automation, data, and software development.
+
+GitHub: https://github.com/Dev02553
+LinkedIn: https://www.linkedin.com/in/david-silva-rodrigues-500190284/
