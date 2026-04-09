@@ -17,12 +17,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: maven
 
       - name: Set up Chrome
         uses: browser-actions/setup-chrome@v1
 
       - name: Run tests (headless)
-        working-directory: "Projeto A3 ParaBank/ParaBankTestProject"
         run: mvn -q -Dheadless=true clean test
 
       - name: Upload screenshots (if failed)
@@ -30,4 +30,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
-          path: "Projeto A3 ParaBank/ParaBankTestProject/target/screenshots"
+          path: target/screenshots
